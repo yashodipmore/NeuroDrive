@@ -1115,25 +1115,11 @@ FUNCTION Rate_Limit(new_value, old_value, max_change_rate):
 <h2>4.2 SYSTEM DIAGRAM</h2>
 
 <div class="code-block">
-Physical Layout:
+<h3 style="margin-bottom: 20px;">Physical Layout Diagram:</h3>
+<img src="system_diagram.png" alt="System Diagram" style="width: 100%; max-width: 700px; display: block; margin: 20px auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
 
-[Power Supply (12V)] ──┬──> [Motor Driver L298N] ──> [DC Motor]
-                       │                                    │
-                       │                              [Encoder]
-                       │                                    │
-                       └──> [Raspberry Pi 4] <──────────────┤
-                                    │                       │
-                                    ├───> [Current Sensor]──┘
-                                    ├───> [Temp Sensor]
-                                    └───> [OLED Display]
-
-Signal Flow:
-
-Encoder A/B signals ──> GPIO 17, 18 (interrupt-driven)
-Current sensor analog ──> GPIO 4 (via MCP3008 ADC)
-Temperature sensor ──> GPIO 27 (via MCP3008 ADC)
-PWM motor control ──> GPIO 12, 13 (hardware PWM)
-OLED display ──> I2C bus (SDA: GPIO 2, SCL: GPIO 3)
+<h3 style="margin-top: 30px;">Signal Flow Diagram:</h3>
+<img src="signal flow.png" alt="Signal Flow Diagram" style="width: 100%; max-width: 700px; display: block; margin: 20px auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
 </div>
 
 <h2>4.3 SENSOR INTEGRATION</h2>
