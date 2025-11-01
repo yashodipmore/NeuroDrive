@@ -465,179 +465,174 @@ L = w₁ × MSE(setpoint, output) + w₂ × overshoot_penalty
 
 <h3>Control Algorithm Pseudocode</h3>
 
-<div class="code-block" style="font-family: 'Courier New', monospace; font-size: 10pt; line-height: 1.6; background: #f8f8f8; padding: 20px; border-left: 4px solid #0066cc;">
-<strong style="color: #cc0000;">// ===== INITIALIZATION PHASE =====</strong>
+<div class="code-block" style="font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6; background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; margin: 20px 0;">
+<pre style="margin: 0;"><span style="color: #6a9955;">// ===== INITIALIZATION PHASE =====</span>
 
-FUNCTION Initialize_Controller():
-    // Load pre-trained neural network model
-    neural_model ← Load_TFLite_Model("adaptive_pid_model.tflite")
+<span style="color: #569cd6;">FUNCTION</span> <span style="color: #dcdcaa;">Initialize_Controller</span>():
+    <span style="color: #6a9955;">// Load pre-trained neural network model</span>
+    neural_model ← Load_TFLite_Model(<span style="color: #ce9178;">"adaptive_pid_model.tflite"</span>)
     
-    // Set baseline PID gains (safe fallback values)
-    Kp_base ← 1.2
-    Ki_base ← 0.15
-    Kd_base ← 0.08
+    <span style="color: #6a9955;">// Set baseline PID gains (safe fallback values)</span>
+    Kp_base ← <span style="color: #b5cea8;">1.2</span>
+    Ki_base ← <span style="color: #b5cea8;">0.15</span>
+    Kd_base ← <span style="color: #b5cea8;">0.08</span>
     
-    // Initialize state variables
-    integral ← 0.0
-    previous_error ← 0.0
-    previous_control ← 0.0
+    <span style="color: #6a9955;">// Initialize state variables</span>
+    integral ← <span style="color: #b5cea8;">0.0</span>
+    previous_error ← <span style="color: #b5cea8;">0.0</span>
+    previous_control ← <span style="color: #b5cea8;">0.0</span>
     
-    // Define safety boundaries for adaptive gains
-    Kp_min ← 0.1,  Kp_max ← 2.5
-    Ki_min ← 0.01, Ki_max ← 0.8
-    Kd_min ← 0.005, Kd_max ← 0.3
+    <span style="color: #6a9955;">// Define safety boundaries for adaptive gains</span>
+    Kp_min ← <span style="color: #b5cea8;">0.1</span>,  Kp_max ← <span style="color: #b5cea8;">2.5</span>
+    Ki_min ← <span style="color: #b5cea8;">0.01</span>, Ki_max ← <span style="color: #b5cea8;">0.8</span>
+    Kd_min ← <span style="color: #b5cea8;">0.005</span>, Kd_max ← <span style="color: #b5cea8;">0.3</span>
     
-    // Control signal limits
-    u_min ← -12.0  // Minimum PWM voltage
-    u_max ← +12.0  // Maximum PWM voltage
+    <span style="color: #6a9955;">// Control signal limits</span>
+    u_min ← <span style="color: #b5cea8;">-12.0</span>  <span style="color: #6a9955;">// Minimum PWM voltage</span>
+    u_max ← <span style="color: #b5cea8;">+12.0</span>  <span style="color: #6a9955;">// Maximum PWM voltage</span>
     
-    // Anti-windup limits
-    integral_min ← -50.0
-    integral_max ← +50.0
+    <span style="color: #6a9955;">// Anti-windup limits</span>
+    integral_min ← <span style="color: #b5cea8;">-50.0</span>
+    integral_max ← <span style="color: #b5cea8;">+50.0</span>
     
-    // Sampling time
-    dt ← 0.01  // 10ms = 100Hz control frequency
+    <span style="color: #6a9955;">// Sampling time</span>
+    dt ← <span style="color: #b5cea8;">0.01</span>  <span style="color: #6a9955;">// 10ms = 100Hz control frequency</span>
     
-    // System health flags
-    neural_active ← TRUE
-    sensor_valid ← TRUE
+    <span style="color: #6a9955;">// System health flags</span>
+    neural_active ← <span style="color: #569cd6;">TRUE</span>
+    sensor_valid ← <span style="color: #569cd6;">TRUE</span>
     
-    RETURN Controller_State
+    <span style="color: #c586c0;">RETURN</span> Controller_State
 
-<strong style="color: #cc0000;">// ===== MAIN CONTROL LOOP (Executes at 100Hz) =====</strong>
+<span style="color: #6a9955;">// ===== MAIN CONTROL LOOP (Executes at 100Hz) =====</span>
 
-FUNCTION Control_Loop():
-    WHILE system_running:
-        
-        <strong style="color: #0066cc;">// STEP 1: Sensor Reading (0.8ms)</strong>
+<span style="color: #569cd6;">FUNCTION</span> <span style="color: #dcdcaa;">Control_Loop</span>():
+    <span style="color: #c586c0;">WHILE</span> system_running:
+        <span style="color: #6a9955;">// STEP 1: Sensor Reading (0.8ms)</span>
         current_speed ← Read_Encoder()
         current_current ← Read_Current_Sensor()
         current_temp ← Read_Temperature_Sensor()
         load_estimate ← Estimate_Load(current_current, current_speed)
         
-        <strong style="color: #0066cc;">// STEP 2: Error Calculation (0.3ms)</strong>
+        <span style="color: #6a9955;">// STEP 2: Error Calculation (0.3ms)</span>
         error ← setpoint_speed - current_speed
         error_derivative ← (error - previous_error) / dt
         
-        <strong style="color: #0066cc;">// STEP 3: Integral Update with Anti-Windup (0.2ms)</strong>
+        <span style="color: #6a9955;">// STEP 3: Integral Update with Anti-Windup (0.2ms)</span>
         integral ← integral + (error × dt)
-        IF integral > integral_max THEN:
+        <span style="color: #c586c0;">IF</span> integral > integral_max <span style="color: #c586c0;">THEN</span>:
             integral ← integral_max
-        ELSE IF integral < integral_min THEN:
+        <span style="color: #c586c0;">ELSE IF</span> integral < integral_min <span style="color: #c586c0;">THEN</span>:
             integral ← integral_min
-        END IF
+        <span style="color: #c586c0;">END IF</span>
         
-        <strong style="color: #0066cc;">// STEP 4: Prepare Neural Network Inputs (0.4ms)</strong>
-        // Normalize all inputs to [-1, 1] range
-        input_vector[0] ← Normalize(error, -500, 500)
-        input_vector[1] ← Normalize(error_derivative, -100, 100)
-        input_vector[2] ← Normalize(integral, integral_min, integral_max)
-        input_vector[3] ← Normalize(current_speed, 0, 3000)
-        input_vector[4] ← Normalize(load_estimate, 0, 1.0)
-        input_vector[5] ← Normalize(current_temp, 20, 80)
-        input_vector[6] ← Normalize(previous_control, u_min, u_max)
-        input_vector[7] ← Time_In_Current_Regime()
+        <span style="color: #6a9955;">// STEP 4: Prepare Neural Network Inputs (0.4ms)</span>
+        <span style="color: #6a9955;">// Normalize all inputs to [-1, 1] range</span>
+        input_vector[<span style="color: #b5cea8;">0</span>] ← Normalize(error, -<span style="color: #b5cea8;">500</span>, <span style="color: #b5cea8;">500</span>)
+        input_vector[<span style="color: #b5cea8;">1</span>] ← Normalize(error_derivative, -<span style="color: #b5cea8;">100</span>, <span style="color: #b5cea8;">100</span>)
+        input_vector[<span style="color: #b5cea8;">2</span>] ← Normalize(integral, integral_min, integral_max)
+        input_vector[<span style="color: #b5cea8;">3</span>] ← Normalize(current_speed, <span style="color: #b5cea8;">0</span>, <span style="color: #b5cea8;">3000</span>)
+        input_vector[<span style="color: #b5cea8;">4</span>] ← Normalize(load_estimate, <span style="color: #b5cea8;">0</span>, <span style="color: #b5cea8;">1.0</span>)
+        input_vector[<span style="color: #b5cea8;">5</span>] ← Normalize(current_temp, <span style="color: #b5cea8;">20</span>, <span style="color: #b5cea8;">80</span>)
+        input_vector[<span style="color: #b5cea8;">6</span>] ← Normalize(previous_control, u_min, u_max)
+        input_vector[<span style="color: #b5cea8;">7</span>] ← Time_In_Current_Regime()
         
-        <strong style="color: #0066cc;">// STEP 5: Neural Network Inference (7.2ms)</strong>
-        IF neural_active AND sensor_valid THEN:
+        <span style="color: #6a9955;">// STEP 5: Neural Network Inference (7.2ms)</span>
+        <span style="color: #c586c0;">IF</span> neural_active <span style="color: #c586c0;">AND</span> sensor_valid <span style="color: #c586c0;">THEN</span>:
             raw_gains[] ← neural_model.Predict(input_vector)
             
-            // Scale outputs from [0,1] to actual gain ranges
-            Kp ← Kp_min + (Kp_max - Kp_min) × raw_gains[0]
-            Ki ← Ki_min + (Ki_max - Ki_min) × raw_gains[1]
-            Kd ← Kd_min + (Kd_max - Kd_min) × raw_gains[2]
+            <span style="color: #6a9955;">// Scale outputs from [0,1] to actual gain ranges</span>
+            Kp ← Kp_min + (Kp_max - Kp_min) × raw_gains[<span style="color: #b5cea8;">0</span>]
+            Ki ← Ki_min + (Ki_max - Ki_min) × raw_gains[<span style="color: #b5cea8;">1</span>]
+            Kd ← Kd_min + (Kd_max - Kd_min) × raw_gains[<span style="color: #b5cea8;">2</span>]
             
-            <strong style="color: #0066cc;">// Rate limiting: Prevent sudden gain jumps</strong>
-            Kp ← Rate_Limit(Kp, previous_Kp, 0.1)  // Max 10% change
-            Ki ← Rate_Limit(Ki, previous_Ki, 0.1)
-            Kd ← Rate_Limit(Kd, previous_Kd, 0.1)
-            
-        ELSE:
-            <strong style="color: #ff0000;">// Fallback to baseline gains</strong>
+            <span style="color: #6a9955;">// Rate limiting: Prevent sudden gain jumps</span>
+            Kp ← Rate_Limit(Kp, previous_Kp, <span style="color: #b5cea8;">0.1</span>)  <span style="color: #6a9955;">// Max 10% change</span>
+            Ki ← Rate_Limit(Ki, previous_Ki, <span style="color: #b5cea8;">0.1</span>)
+            Kd ← Rate_Limit(Kd, previous_Kd, <span style="color: #b5cea8;">0.1</span>)
+        <span style="color: #c586c0;">ELSE</span>:
+            <span style="color: #6a9955;">// Fallback to baseline gains</span>
             Kp ← Kp_base
             Ki ← Ki_base
             Kd ← Kd_base
-        END IF
+        <span style="color: #c586c0;">END IF</span>
         
-        <strong style="color: #0066cc;">// STEP 6: PID Control Computation (0.4ms)</strong>
+        <span style="color: #6a9955;">// STEP 6: PID Control Computation (0.4ms)</span>
         P_term ← Kp × error
         I_term ← Ki × integral
         D_term ← Kd × error_derivative
-        
         control_signal ← P_term + I_term + D_term
         
-        <strong style="color: #0066cc;">// STEP 7: Output Saturation (0.2ms)</strong>
-        IF control_signal > u_max THEN:
+        <span style="color: #6a9955;">// STEP 7: Output Saturation (0.2ms)</span>
+        <span style="color: #c586c0;">IF</span> control_signal > u_max <span style="color: #c586c0;">THEN</span>:
             control_signal ← u_max
-        ELSE IF control_signal < u_min THEN:
+        <span style="color: #c586c0;">ELSE IF</span> control_signal < u_min <span style="color: #c586c0;">THEN</span>:
             control_signal ← u_min
-        END IF
+        <span style="color: #c586c0;">END IF</span>
         
-        <strong style="color: #0066cc;">// STEP 8: Apply Control to Motor Driver (0.2ms)</strong>
+        <span style="color: #6a9955;">// STEP 8: Apply Control to Motor Driver (0.2ms)</span>
         Set_Motor_PWM(control_signal)
         
-        <strong style="color: #0066cc;">// STEP 9: Performance Monitoring</strong>
+        <span style="color: #6a9955;">// STEP 9: Performance Monitoring</span>
         Log_Data(error, Kp, Ki, Kd, control_signal)
         Check_System_Health()
         
-        <strong style="color: #0066cc;">// STEP 10: Update Previous Values</strong>
+        <span style="color: #6a9955;">// STEP 10: Update Previous Values</span>
         previous_error ← error
         previous_control ← control_signal
         previous_Kp ← Kp
         previous_Ki ← Ki
         previous_Kd ← Kd
         
-        <strong style="color: #0066cc;">// STEP 11: Wait for Next Control Cycle</strong>
+        <span style="color: #6a9955;">// STEP 11: Wait for Next Control Cycle</span>
         Wait_Until(next_sampling_instant)
-        
-    END WHILE
+    <span style="color: #c586c0;">END WHILE</span>
 
-<strong style="color: #cc0000;">// ===== SAFETY MONITORING (Runs in Parallel) =====</strong>
+<span style="color: #6a9955;">// ===== SAFETY MONITORING (Runs in Parallel) =====</span>
 
-FUNCTION Safety_Monitor():
-    WHILE system_running:
+<span style="color: #569cd6;">FUNCTION</span> <span style="color: #dcdcaa;">Safety_Monitor</span>():
+    <span style="color: #c586c0;">WHILE</span> system_running:
+        <span style="color: #6a9955;">// Check sensor validity</span>
+        <span style="color: #c586c0;">IF</span> Encoder_Signal_Lost() <span style="color: #c586c0;">OR</span> Current_Out_Of_Range() <span style="color: #c586c0;">THEN</span>:
+            sensor_valid ← <span style="color: #569cd6;">FALSE</span>
+            Trigger_Alarm(<span style="color: #ce9178;">"SENSOR_FAULT"</span>)
+        <span style="color: #c586c0;">END IF</span>
         
-        // Check sensor validity
-        IF Encoder_Signal_Lost() OR Current_Out_Of_Range() THEN:
-            sensor_valid ← FALSE
-            Trigger_Alarm("SENSOR_FAULT")
-        END IF
+        <span style="color: #6a9955;">// Check neural network output validity</span>
+        <span style="color: #c586c0;">IF</span> Kp <span style="color: #c586c0;">NOT IN</span> [Kp_min, Kp_max] <span style="color: #c586c0;">OR</span>
+           Ki <span style="color: #c586c0;">NOT IN</span> [Ki_min, Ki_max] <span style="color: #c586c0;">OR</span>
+           Kd <span style="color: #c586c0;">NOT IN</span> [Kd_min, Kd_max] <span style="color: #c586c0;">THEN</span>:
+            neural_active ← <span style="color: #569cd6;">FALSE</span>
+            Trigger_Alarm(<span style="color: #ce9178;">"NEURAL_OUTPUT_INVALID"</span>)
+        <span style="color: #c586c0;">END IF</span>
         
-        // Check neural network output validity
-        IF Kp NOT IN [Kp_min, Kp_max] OR 
-           Ki NOT IN [Ki_min, Ki_max] OR 
-           Kd NOT IN [Kd_min, Kd_max] THEN:
-            neural_active ← FALSE
-            Trigger_Alarm("NEURAL_OUTPUT_INVALID")
-        END IF
+        <span style="color: #6a9955;">// Check for oscillations</span>
+        <span style="color: #c586c0;">IF</span> Detect_Sustained_Oscillation(error_history) <span style="color: #c586c0;">THEN</span>:
+            neural_active ← <span style="color: #569cd6;">FALSE</span>
+            Trigger_Alarm(<span style="color: #ce9178;">"PERFORMANCE_DEGRADATION"</span>)
+        <span style="color: #c586c0;">END IF</span>
         
-        // Check for oscillations
-        IF Detect_Sustained_Oscillation(error_history) THEN:
-            neural_active ← FALSE
-            Trigger_Alarm("PERFORMANCE_DEGRADATION")
-        END IF
-        
-        // Emergency stop conditions
-        IF Over_Current() OR Over_Temperature() THEN:
-            control_signal ← 0
+        <span style="color: #6a9955;">// Emergency stop conditions</span>
+        <span style="color: #c586c0;">IF</span> Over_Current() <span style="color: #c586c0;">OR</span> Over_Temperature() <span style="color: #c586c0;">THEN</span>:
+            control_signal ← <span style="color: #b5cea8;">0</span>
             Emergency_Shutdown()
-        END IF
+        <span style="color: #c586c0;">END IF</span>
         
-        Sleep(100ms)  // Check every 100ms
-    END WHILE
+        Sleep(<span style="color: #b5cea8;">100</span>ms)  <span style="color: #6a9955;">// Check every 100ms</span>
+    <span style="color: #c586c0;">END WHILE</span>
 
-<strong style="color: #cc0000;">// ===== UTILITY FUNCTIONS =====</strong>
+<span style="color: #6a9955;">// ===== UTILITY FUNCTIONS =====</span>
 
-FUNCTION Normalize(value, min_val, max_val):
-    RETURN 2.0 × (value - min_val) / (max_val - min_val) - 1.0
+<span style="color: #569cd6;">FUNCTION</span> <span style="color: #dcdcaa;">Normalize</span>(value, min_val, max_val):
+    <span style="color: #c586c0;">RETURN</span> <span style="color: #b5cea8;">2.0</span> × (value - min_val) / (max_val - min_val) - <span style="color: #b5cea8;">1.0</span>
 
-FUNCTION Rate_Limit(new_value, old_value, max_change_rate):
+<span style="color: #569cd6;">FUNCTION</span> <span style="color: #dcdcaa;">Rate_Limit</span>(new_value, old_value, max_change_rate):
     change ← new_value - old_value
-    IF ABS(change) > max_change_rate × old_value THEN:
-        RETURN old_value + SIGN(change) × max_change_rate × old_value
-    ELSE:
-        RETURN new_value
-    END IF
+    <span style="color: #c586c0;">IF</span> ABS(change) > max_change_rate × old_value <span style="color: #c586c0;">THEN</span>:
+        <span style="color: #c586c0;">RETURN</span> old_value + SIGN(change) × max_change_rate × old_value
+    <span style="color: #c586c0;">ELSE</span>:
+        <span style="color: #c586c0;">RETURN</span> new_value
+    <span style="color: #c586c0;">END IF</span></pre>
 </div>
 
 <h2>2.4 INNOVATION HIGHLIGHTS</h2>
@@ -833,9 +828,11 @@ FUNCTION Rate_Limit(new_value, old_value, max_change_rate):
 <div style="background: #f8f8f8; padding: 20px; margin: 15px 0; border-left: 4px solid #333;">
     <p><strong>Closed-Loop System:</strong></p>
     
-    <div style="font-size: 12pt; text-align: center; margin: 20px 0;">
-        G<sub>CL</sub>(s) = <span style="border-top: 1px solid black; display: inline-block; padding-top: 5px;">C(s) · G<sub>plant</sub>(s)</span><br>
-        <span style="display: inline-block; margin-top: -5px;">1 + C(s) · G<sub>plant</sub>(s)</span>
+    <div style="font-size: 16pt; text-align: center; margin: 20px 0;">
+        G<sub>CL</sub>(s) = <div style="display: inline-block; vertical-align: middle;">
+            <div style="border-bottom: 2px solid black; padding-bottom: 3px;">C(s) · G<sub>plant</sub>(s)</div>
+            <div style="padding-top: 3px;">1 + C(s) · G<sub>plant</sub>(s)</div>
+        </div>
     </div>
     
     <p><strong>Where:</strong></p>
@@ -1221,52 +1218,53 @@ FUNCTION Rate_Limit(new_value, old_value, max_change_rate):
 
 <h2>5.2 ALGORITHM IMPLEMENTATION</h2>
 
-<div class="code-block">
-Main Control Loop (C++ implementation):
+<div class="code-block" style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6; overflow-x: auto; margin: 20px 0;">
+<pre style="margin: 0;"><span style="color: #6a9955;">// Main Control Loop (C++ implementation)</span>
 
-class AdaptiveNeuralPID {
-private:
-    TFLiteInterpreter neural_model;
-    float Kp, Ki, Kd;
-    float integral, prev_error;
-    float Kp_min, Kp_max, Ki_min, Ki_max, Kd_min, Kd_max;
+<span style="color: #569cd6;">class</span> <span style="color: #4ec9b0;">AdaptiveNeuralPID</span> {
+<span style="color: #569cd6;">private:</span>
+    <span style="color: #4ec9b0;">TFLiteInterpreter</span> neural_model;
+    <span style="color: #4ec9b0;">float</span> Kp, Ki, Kd;
+    <span style="color: #4ec9b0;">float</span> integral, prev_error;
+    <span style="color: #4ec9b0;">float</span> Kp_min, Kp_max, Ki_min, Ki_max, Kd_min, Kd_max;
     
-public:
-    AdaptiveNeuralPID(string model_path) {
-        load_neural_model(model_path);
-        initialize_parameters();
+<span style="color: #569cd6;">public:</span>
+    <span style="color: #dcdcaa;">AdaptiveNeuralPID</span>(<span style="color: #4ec9b0;">string</span> model_path) {
+        <span style="color: #dcdcaa;">load_neural_model</span>(model_path);
+        <span style="color: #dcdcaa;">initialize_parameters</span>();
     }
     
-    float compute_control(float setpoint, float measured, float dt) {
-        float error = setpoint - measured;
-        float derivative = (error - prev_error) / dt;
+    <span style="color: #4ec9b0;">float</span> <span style="color: #dcdcaa;">compute_control</span>(<span style="color: #4ec9b0;">float</span> setpoint, <span style="color: #4ec9b0;">float</span> measured, <span style="color: #4ec9b0;">float</span> dt) {
+        <span style="color: #4ec9b0;">float</span> error = setpoint - measured;
+        <span style="color: #4ec9b0;">float</span> derivative = (error - prev_error) / dt;
         integral += error * dt;
         
-        // Anti-windup
-        if (integral > integral_max) integral = integral_max;
-        if (integral < integral_min) integral = integral_min;
+        <span style="color: #6a9955;">// Anti-windup</span>
+        <span style="color: #c586c0;">if</span> (integral > integral_max) integral = integral_max;
+        <span style="color: #c586c0;">if</span> (integral < integral_min) integral = integral_min;
         
-        // Neural gain adaptation
-        vector<float> nn_input = prepare_neural_input(
+        <span style="color: #6a9955;">// Neural gain adaptation</span>
+        <span style="color: #4ec9b0;">vector</span><<span style="color: #4ec9b0;">float</span>> nn_input = <span style="color: #dcdcaa;">prepare_neural_input</span>(
             error, derivative, integral, measured
         );
-        vector<float> gains = neural_model.predict(nn_input);
+        <span style="color: #4ec9b0;">vector</span><<span style="color: #4ec9b0;">float</span>> gains = neural_model.<span style="color: #dcdcaa;">predict</span>(nn_input);
         
-        // Apply safety constraints
-        Kp = constrain(gains[0], Kp_min, Kp_max);
-        Ki = constrain(gains[1], Ki_min, Ki_max);
-        Kd = constrain(gains[2], Kd_min, Kd_max);
+        <span style="color: #6a9955;">// Apply safety constraints</span>
+        Kp = <span style="color: #dcdcaa;">constrain</span>(gains[<span style="color: #b5cea8;">0</span>], Kp_min, Kp_max);
+        Ki = <span style="color: #dcdcaa;">constrain</span>(gains[<span style="color: #b5cea8;">1</span>], Ki_min, Ki_max);
+        Kd = <span style="color: #dcdcaa;">constrain</span>(gains[<span style="color: #b5cea8;">2</span>], Kd_min, Kd_max);
         
-        // PID computation
-        float control = Kp * error + Ki * integral + Kd * derivative;
+        <span style="color: #6a9955;">// PID computation</span>
+        <span style="color: #4ec9b0;">float</span> control = Kp * error + Ki * integral + Kd * derivative;
         
-        // Output saturation
-        control = constrain(control, control_min, control_max);
+        <span style="color: #6a9955;">// Output saturation</span>
+        control = <span style="color: #dcdcaa;">constrain</span>(control, control_min, control_max);
         
         prev_error = error;
-        return control;
+        <span style="color: #c586c0;">return</span> control;
     }
-};
+};</pre>
+</div>
 </div>
 
 <h2>5.3 REAL-TIME OPTIMIZATION</h2>
@@ -1881,13 +1879,86 @@ public:
 
 <div class="divider"></div>
 
-<h3>Faculty Mentor: Dr. [Name]</h3>
-<p><strong>Designation:</strong> Associate Professor, Department of Electrical Engineering</p>
-<p><strong>Specialization:</strong> Control Systems and Automotive Electronics</p>
-<p><strong>Experience:</strong> 15 years in academia and industry (5 years at automotive tier-1 supplier)</p>
-<p><strong>Research Areas:</strong> Adaptive control, Electric vehicle systems, Embedded control</p>
-<p><strong>Publications:</strong> 25+ papers in IEEE/SAE journals and conferences</p>
-<p><strong>Guidance:</strong> Weekly project meetings, technical review, resource facilitation, industry connections</p>
+<h3>Faculty Mentors</h3>
+
+<div style="background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #0066cc;">
+    <h4>Dr. Nadeem Akhtar</h4>
+    <p><strong>ID:</strong> 1-758836935</p>
+    <p><strong>Designation:</strong> Assistant Professor</p>
+    <p><strong>Qualification:</strong> M.E., Ph.D</p>
+    <p><strong>Area of Expertise:</strong> Circuit Theory, Programmable Logic Control, Control System, Research Methodology</p>
+    <p><strong>Experience:</strong> 16 Years</p>
+    <p><strong>Email ID:</strong> nadeem.ansari@rcpit.ac.in</p>
+</div>
+
+<div style="background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #0066cc;">
+    <h4>Dr. Yogesh Kalidas Kirange</h4>
+    <p><strong>ID:</strong> 1-9320383342</p>
+    <p><strong>Designation:</strong> Assistant Professor</p>
+    <p><strong>Qualification:</strong> M.E., Ph.D</p>
+    <p><strong>Area of Expertise:</strong> Electrical Machines and Drives, Electrical Power System, Power Electronics</p>
+    <p><strong>Experience:</strong> 14 Years</p>
+    <p><strong>Email ID:</strong> yogesh.kirange@rcpit.ac.in</p>
+</div>
+
+<h3>Team Members</h3>
+
+<div style="background: #f0f7ff; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #00aa00;">
+    <h4>Team Leader</h4>
+    <p><strong>Name:</strong> Yashodip More</p>
+    <p><strong>Department:</strong> Electrical Engineering, Final Year</p>
+    <p><strong>Institution:</strong> RCPIT</p>
+    <p><strong>Role:</strong> Project Lead, Control System Design, Hardware Integration</p>
+    <p><strong>Contact:</strong> yashodipmore2004@gmail.com | +91 7820811636</p>
+</div>
+
+<!-- Core Team Members -->
+<div style="background: #f0f7ff; padding: 20px; margin: 20px 0; border-radius: 8px;">
+    <h4 style="color: #0066cc; margin-bottom: 25px; border-bottom: 2px solid #0066cc; padding-bottom: 10px;">Core Team Members</h4>
+    
+    <div style="background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #00aa00;">
+        <h4 style="color: #333; margin-top: 0;">Komal Kumavat</h4>
+        <p><strong>Department:</strong> Electrical Engineering, Final Year</p>
+        <p><strong>Institution:</strong> RCPIT</p>
+        <p><strong>Expertise:</strong> Power Electronics, Motor Control Systems</p>
+        <p><strong>Role:</strong> Power Electronics Design, Motor Control Implementation</p>
+        <p><strong>Responsibilities:</strong></p>
+        <ul style="margin-top: 5px;">
+            <li>Motor drive system implementation</li>
+            <li>Power electronics circuit design</li>
+            <li>Control system hardware integration</li>
+        </ul>
+    </div>
+    
+    <div style="background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #00aa00;">
+        <h4 style="color: #333; margin-top: 0;">Jaykumar Girase</h4>
+        <p><strong>Department:</strong> Electrical Engineering, Final Year</p>
+        <p><strong>Institution:</strong> RCPIT</p>
+        <p><strong>Expertise:</strong> Circuit Design, Hardware Testing</p>
+        <p><strong>Role:</strong> Hardware Implementation Lead</p>
+        <p><strong>Responsibilities:</strong></p>
+        <ul style="margin-top: 5px;">
+            <li>Circuit design and prototyping</li>
+            <li>Hardware testing and validation</li>
+            <li>Sensor integration and calibration</li>
+        </ul>
+    </div>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #00aa00;">
+        <h4 style="color: #333; margin-top: 0;">Tejas Patil</h4>
+        <p><strong>Department:</strong> Artificial Intelligence & Data Science, Second Year</p>
+        <p><strong>Institution:</strong> RCPIT</p>
+        <p><strong>Expertise:</strong> Machine Learning, Neural Networks, Data Analysis</p>
+        <p><strong>Role:</strong> AI/ML Implementation Lead</p>
+        <p><strong>Responsibilities:</strong></p>
+        <ul style="margin-top: 5px;">
+            <li>Neural network architecture design</li>
+            <li>Machine learning model implementation</li>
+            <li>Data analytics and performance optimization</li>
+            <li>AI-based control system integration</li>
+        </ul>
+    </div>
+</div>
 
 <h2>Collaborative Expertise</h2>
 
@@ -1989,21 +2060,6 @@ public:
     </p>
 </div>
 
-<!-- PRINT INSTRUCTIONS -->
-<div style="page-break-before: always; padding: 50px; text-align: center; background: #f9f9f9; border: 2px dashed #999; margin-top: 50px;">
-    <h2 style="color: #0066cc;">Document Ready for Submission</h2>
-    <p style="font-size: 12pt; margin: 20px 0;">This document is professionally formatted and ready for:</p>
-    <ul style="list-style: none; padding: 0; font-size: 11pt;">
-        <li style="margin: 10px 0;">✓ <strong>Printing:</strong> Use Ctrl+P / Cmd+P and select "Save as PDF"</li>
-        <li style="margin: 10px 0;">✓ <strong>Digital Submission:</strong> Professional layout with proper fonts and spacing</li>
-        <li style="margin: 10px 0;">✓ <strong>Presentation:</strong> Clear structure with visual hierarchy</li>
-        <li style="margin: 10px 0;">✓ <strong>Review:</strong> Comprehensive coverage of all technical aspects</li>
-    </ul>
-    <p style="font-size: 10pt; color: #666; margin-top: 30px;">
-        Total Pages: Approximately 25-30 pages when printed<br>
-        Format: A4 size, Professional business document layout
-    </p>
-</div>
 
 </body>
 </html>
